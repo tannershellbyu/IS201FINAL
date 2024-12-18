@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Easy Disc Golf</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        #gameCanvas {
+            border: 2px solid #2c3e50;
+            background-color: #dff9fb;
+            margin: 20px auto;
+            display: block;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: #1abc9c;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #16a085;
+        }
+    </style>
+</head>
+<body>
+    <h1>Easy Disc Golf</h1>
+    <canvas id="gameCanvas" width="600" height="300"></canvas>
+    <div id="controls">
+        <button onclick="throwDisc('low')">Low Throw</button>
+        <button onclick="throwDisc('medium')">Medium Throw</button>
+        <button onclick="throwDisc('high')">High Throw</button>
+    </div>
+    <p id="status">Choose your throw to start!</p>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let basketX = 350; // Initial basket position
+        let basketY = 220;
+        let discX = 50;
+        let discY = 250;
+        let throwInProgress = false;
+
+        function drawBasket() {
+            ctx.fillStyle = 'brown';
+            ctx.fillRect(basketX - 5, basketY - 30, 10, 60); // Pole
+            ctx.beginPath();
+            ctx.arc(basketX, basketY - 30, 20, 0, Math.PI * 2); // Basket
+            ctx.fillStyle = 'orange';
+            ctx.fill();
+        }
+
+        function drawDisc(x, y) {
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = 'blue';
+            ctx.fill();
+        }
+
+        function drawThrower() {
+            ctx.fillStyle = 'black';
+            // Head
+            ctx.beginPath();
+            ctx.arc(discX - 20, discY - 10, 10, 0, Math.PI * 2);
+            ctx.fill();
+            // Body
+            ctx.fillRect(discX - 22, discY, 4, 30);
+            // Arm (throwing motion)
+            ctx.beginPath();
+            ctx.moveTo(discX - 20, discY + 5);
+            ctx.lineTo(discX - 10, discY - 5);
+            ctx.stroke();
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function throwDisc(throwType) {
+            if (throwInProgress) return;
+
+            let angle, speed;
+            if (throwType === 'low') {
+                angle = Math.PI / 18; // Low throw
+                speed = 5;
+            } else if (throwType === 'medium') {
+                angle = Math.PI / 12; // Medium throw
+                speed = 7;
+            } else {
+                angle = Math.PI / 10; // High throw
+                speed = 9;
+            }
+
+            let vx = Math.cos(angle) * speed;
+            let vy = -Math.sin(angle) * speed;
+            let x = discX;
+            let y = discY;
+            throwInProgress = true;
+
+            const interval = setInterval(() => {
+                clearCanvas();
+                drawBasket();
+                drawThrower();
+                drawDisc(x, y);
+                x += vx;
+                y += vy;
+                vy += 0.1; // Gravity reduced for easier play
+
+                if (x > canvas.width || y > canvas.height) {
+                    clearInterval(interval);
+                    throwInProgress = false;
+                    document.getElementById('status').textContent = 'Missed! Try again.';
+                    resetBasketPosition();
+                }
+
+                const dist = Math.hypot(x - basketX, y - basketY + 30);
+                if (dist < 28) { // Adjusted distance for easier scoring
+                    clearInterval(interval);
+                    throwInProgress = false;
+                    document.getElementById('status').textContent = 'You scored! Great throw!';
+                    resetBasketPosition();
+                }
+            }, 30);
+        }
+
+        function resetBasketPosition() {
+            basketX = Math.random() * (canvas.width - 100) + 100; // Ensure basket stays within bounds
+            basketY = Math.random() * (canvas.height - 150) + 100; // Avoid too close to edges
+            resetGame();
+        }
+
+        function resetGame() {
+            throwInProgress = false;
+            document.getElementById('status').textContent = 'Choose your throw to start!';
+            clearCanvas();
+            drawBasket();
+            drawThrower();
+            drawDisc(discX, discY);
+        }
+
+        drawBasket();
+        drawThrower();
+        drawDisc(discX, discY);
+    </script>
+</body>
+</html>
